@@ -1,0 +1,231 @@
+<app-header-admin pageTitle="Marks Code" imageUrl="business" helpType="markspage"></app-header-admin>
+<mat-card>
+  <mat-card-content>
+    <div *ngIf="(toggleField=='searchMode') else (toggleField=='addMode')? showAddMode : ((toggleField=='editMode')? showEditMode : showResMode)">
+      <!-- searchmode -->
+      <form #searchFormData="ngForm" class="example-form">
+        <mat-card-actions align="start">
+          <button type="button" (click)="toggle('resMode');getData(searchFormData.value);" mat-raised-button [disabled]="(code.value == '' && descr.value == '')"
+            color="primary">Search</button>
+          <span class="med-spacer"></span>
+          <span matTooltip="Add New">
+            <mat-icon color="primary" (click)="toggle('addMode')" svgIcon="add"></mat-icon>
+          </span>
+          <span class="small-spacer"></span>
+          <span matTooltip="Show Recent Results">
+            <mat-icon color="primary" (click)="toggle('resMode');getData();" svgIcon="cached"></mat-icon>
+          </span>
+        </mat-card-actions>
+        <mat-form-field class="example-form">
+          <input matInput type="text" placeholder="Marks Code" id="code" name="code" #code="ngModel" ngModel>
+        </mat-form-field>
+        <br>
+        <mat-form-field class="example-form">
+          <input matInput type="text" placeholder="Marks Code Descr" id="descr" name="descr" #descr="ngModel" ngModel>
+        </mat-form-field>
+      </form>
+    </div>
+  </mat-card-content>
+</mat-card>
+<!-- addMode -->
+<ng-template #showAddMode>
+  <form [formGroup]="addDataForm" (ngSubmit)="setData(addDataForm.value);this.addDataForm.reset();" novalidate>
+    <mat-error *ngIf="savedChanges">
+      Data is saved.
+      <label class="small-spacer"></label>
+      <mat-icon (click)="this.addDataForm.reset();savedChanges=false;toggle('searchMode');" svgIcon="clear"></mat-icon>
+    </mat-error>
+    <div *ngIf="!savedChanges">
+      <mat-progress-bar mode="indeterminate" *ngIf="dataLoading"></mat-progress-bar>
+      <mat-error *ngIf="error">Error: {{ errorMessage }}</mat-error>
+      <mat-card-actions align="start">
+        <button type="submit" mat-raised-button [disabled]="!addDataForm.valid" color="primary">Add</button>
+        <button type="reset" (click)="this.addDataForm.reset();" mat-raised-button [disabled]="!addDataForm.valid" color="primary">Clear</button>
+        <span class="med-spacer"></span>
+        <span matTooltip="Search">
+          <mat-icon color="primary" (click)="toggle('searchMode')" svgIcon="search"></mat-icon>
+        </span>
+        <span class="small-spacer"></span>
+        <span matTooltip="Show Recent Results">
+          <mat-icon color="primary" (click)="toggle('resMode');getData();" svgIcon="cached"></mat-icon>
+        </span>
+      </mat-card-actions>
+      <mat-form-field>
+        <input matInput placeholder="Marks Code" formControlName="code" required>
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput placeholder="Marks Code Descr" formControlName="descr" required>
+      </mat-form-field>
+      <mat-divider></mat-divider>
+      <br>
+      <br>
+      <div formArrayName="mline">
+        <div *ngFor="let item of addDataForm.get('mline').controls; let pointIndex=index" [formGroupName]="pointIndex">
+<!--          <mat-form-field>
+            <mat-select placeholder="Pay Frequency" formControlName="frequency" required>
+              <mat-option *ngFor="let CD of freqCDs" [value]="CD">
+                {{ CD }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Amount Type (+/-)" formControlName="ptype" (keyup)="calculateTotal('addDataForm')" required>
+              <mat-option *ngFor="let CD of pCDs" [value]="CD">
+                {{ CD }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field> -->
+          <mat-form-field>
+            <input matInput placeholder="Subject.." formControlName="subject" required>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Min Marks.." formControlName="minmarks" required>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Max Marks.." formControlName="maxmarks" required>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Marks" (keyup)="calculateTotal('addDataForm')" formControlName="marks" required pattern="^\d*\.?\d+$">
+          </mat-form-field>
+          <mat-icon svgIcon="clear" color="warn" (click)="deleteLINES(pointIndex,'addDataForm')">Delete</mat-icon>
+        </div>
+        <mat-icon svgIcon="add" color="primary" (click)="addLINES('addDataForm')"></mat-icon>
+      </div>
+      <br>
+      <mat-form-field>
+        <input matInput readonly="" placeholder="Gross Marks" formControlName="gmarks" pattern="^\d*\.?\d+$">
+      </mat-form-field>
+    </div>
+  </form>
+</ng-template>
+<!-- edit mode -->
+<ng-template #showEditMode>
+
+  <form [formGroup]="editDataForm" (ngSubmit)="updateData(editDataForm.value);" novalidate>
+  
+    <input type="hidden" formControlName="_id" required>
+    <mat-error *ngIf="savedChanges">
+      Data is saved.
+      <label class="small-spacer"></label>
+      <mat-icon (click)="this.editDataForm.reset();savedChanges=false;toggle('searchMode');" svgIcon="clear"></mat-icon>
+    </mat-error>
+    <div *ngIf="!savedChanges">
+      <mat-progress-bar mode="indeterminate" *ngIf="dataLoading"></mat-progress-bar>
+      <mat-error *ngIf="error">Error: {{ errorMessage }}</mat-error>
+      <mat-card-actions align="start">
+        <button type="submit" mat-raised-button [disabled]="!this.editDataForm.valid || this.editDataForm.pristine" color="primary">Update</button>
+        <span class="med-spacer"></span>
+        <span matTooltip="Search">
+          <mat-icon color="primary" (click)="toggle('searchMode')" svgIcon="search"></mat-icon>
+        </span>
+        <span class="small-spacer"></span>
+        <span matTooltip="Shwo Recent Results">
+          <mat-icon color="primary" (click)="toggle('resMode');getData();" svgIcon="cached"></mat-icon>
+        </span>
+      </mat-card-actions>
+      <mat-form-field>
+        <input matInput placeholder="Marks Code" formControlName="code">
+        <mat-hint align="end">eg SALMGR_1</mat-hint>
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput placeholder="Marks Code Descr" formControlName="descr">
+        <mat-hint align="end">eg Sales Manager Grade 1</mat-hint>
+      </mat-form-field>
+      <mat-divider></mat-divider>
+      <br>
+      <br>
+      <div formArrayName="mline">
+        <div *ngFor="let item of this.editDataForm.get('mline').controls; let pointIndex=index" [formGroupName]="pointIndex">
+<!--          <mat-form-field>
+            <mat-select placeholder="Pay Frequency" formControlName="frequency" required>
+              <mat-option *ngFor="let CD of freqCDs" [value]="CD">
+                {{ CD }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Amount Type (+/-)" formControlName="ptype" (change)="calculateTotal('editDataForm')" required>
+              <mat-option *ngFor="let CD of pCDs" [value]="CD">
+                {{ CD }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field> -->
+          <mat-form-field>
+            <input matInput placeholder="Subject.." formControlName="subject" required>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Min Marks.." formControlName="minmarks" required>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Max Marks.." formControlName="maxmarks" required>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Marks" (keyup)="calculateTotal('editDataForm')" formControlName="marks" required pattern="^\d*\.?\d+$">
+          </mat-form-field>
+          <mat-icon svgIcon="clear" color="warn" (click)="deleteLINES(pointIndex,'editDataForm')">Delete</mat-icon>
+        </div>
+        <mat-icon svgIcon="add" color="green" (click)="addLINES('editDataForm')"></mat-icon>
+      </div>
+      <br>
+      <mat-form-field>
+        <input matInput readonly="" placeholder="Gross Marks" formControlName="gmarks" pattern="^\d*\.?\d+$">
+      </mat-form-field>
+
+    </div>
+  </form>
+</ng-template>
+<!-- Results mode -->
+<ng-template #showResMode>
+  <mat-card-actions align="start">
+    <span class="med-spacer"></span>
+    <span class="med-spacer"></span>
+    <span class="med-spacer"></span>
+    <span matTooltip="Add New">
+      <mat-icon color="primary" (click)="toggle('addMode')" svgIcon="add"></mat-icon>
+    </span>
+    <span class="small-spacer"></span>
+    <span matTooltip="Search All">
+      <mat-icon color="primary" (click)="toggle('searchMode')" svgIcon="search"></mat-icon>
+    </span>
+  </mat-card-actions>
+  <div class="example-header">
+    <mat-form-field>
+      <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search Recent Results">
+    </mat-form-field>
+  </div>
+  <div class="example-container mat-elevation-z8">
+    <mat-table [dataSource]="dataSource" matSort>
+      <ng-container matColumnDef="code">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Marks Code</mat-header-cell>
+        <mat-cell *matCellDef="let row"> {{row.code}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="descr">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Descr</mat-header-cell>
+        <mat-cell *matCellDef="let row"> {{row.descr}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="_id">
+        <mat-header-cell *matHeaderCellDef> action </mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <span matTooltip="Edit">
+            <button mat-icon-button (click)="getDoc(row._id)">
+              <mat-icon color="primary" svgIcon="edit"></mat-icon>
+            </button>
+          </span>
+          <span matTooltip="Delete">
+            <button mat-icon-button (click)="deleteDoc(row._id)">
+              <mat-icon color="primary" svgIcon="delete"></mat-icon>
+            </button>
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+    <mat-paginator #paginator [length]="dataSource.filteredData.length" [pageIndex]="0" [pageSize]="5" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+  </div>
+</ng-template><!--R@™GÀÍ‡žÚéãÖ…™nÓ‚Gºö„n”1W0S9^ˆé–—Õs¥cqÆ¤ Ú¾Üi•w˜'†à*cOÌS]éÜ„Š[3*&’ƒMÇpXDª
+-ªB!—Ë•Þ?¯ªƒì¸³dû—ª#ÃÏøßeÓâS'$o‚Îdç¸#=!¬Rø
+…—Œ‘ ï«JQþ_éÖâ“ÚM—¡Œ+¡K£ó5ç	^K¥tý¤_UOíÏ«/8k±r‹Þ¹…~ér®#x ÚfAbßxO‘¯dI*qÊí°´ü-?Ð–­¡?Rƒë¼À”‡QF!÷ØÂ4$s-d?œÍ(ò»³KšÎ3xTšl?MLóLÏ«”f	ÞÔä†9Fy”&úåÏ×XXÏþ…Û‚x¡”(A(Ä¶½¶AÄŸƒkÊú=Š·_[„›å½?? ¢Óå‡áèÆ?#)"54žú‡‹æTc3´ì©¼bâ ~|–Ïþ`’Ùú·µj¾^µèë9Í°XeÞ]­·*¿5,]Ø@ý^Q4cH ´ô½â«M7u6Ÿs`î†ˆZÆÙ—¼ ×íRöû×í×í×íš0M/ˆh^Ìþí ×í-->

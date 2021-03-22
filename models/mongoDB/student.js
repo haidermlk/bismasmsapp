@@ -1,0 +1,47 @@
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+const studentSchema = new Schema({
+    CODE: String,
+    SKEY: String,
+    DESCR: String,
+    MIDDLE_NAME: String,
+    LAST_NAME: String,
+    DOB: String,
+    FATHER_NAME: String,
+    MOTHER_NAME: String,
+    GUARDIAN_NAME: String,
+    GDOB: String,
+    ADD_TYPE_1: String,
+    ADD_LINE_1: String,
+    ADD_LINE_2: String,
+    PIN_CODE: String,
+    STATE: String,
+    COUNTRY: String,
+    ADD_TYPE_2: String,
+    ADD_LINE_12: String,
+    ADD_LINE_22: String,
+    PIN_CODE2: String,
+    STATE2: String,
+    COUNTRY2: String,
+    MOBILE1: String,
+    MOBILE2: String,
+    EMAIL1: String,
+    EMAIL2: String,
+    DEGREE: String,
+    COLLEGE: String,
+    ADD_LINE_C1: String,
+    ADD_LINE_C2: String,
+    PIN_CODE_C: String,
+    STATE_C: String,
+    COUNTRY_C: String,
+    REFERENCE_1: String,
+    REFERENCE_1_ADD: String,
+    REFERENCE_2: String,
+    REFERENCE_2_ADD: String,
+    ENROLLMENT_CODE: String,
+    FEE_CODE: String,
+    MARKS_CODE: String
+});
+
+module.exports = mongoose.model('Student', studentSchema);
